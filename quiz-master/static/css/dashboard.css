@@ -1,0 +1,17 @@
+/* ============================================================
+   Quiz Master Pro - Dashboard stylesheet
+   ============================================================ */
+
+.dash-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+@media (max-width: 900px) { .dash-grid-2 { grid-template-columns: 1fr; } }
+
+/* Category progress list */
+.cat-progress-list { display: flex; flex-direction: column; gap: 14px; }
+.cat-prog-item .cp-head { display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; font-weight: 600; margin-bottom: 7px; }
+.cat-prog-item .cp-bar { height: 8px; border-radius: 99px; background: var(--border); overflow: hidden; }
+.cat-prog-item .cp-fill { height: 100%; border-radius: 99px; transition: width 0.9s ease; }
+
+/* Chart colours (dark-mode friendly) */
+[data-theme="dark"] .chart-card canvas { filter: none; }
+
+.chart-card h3 i { color: var(--primary); margin-right: 4px; }

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}{{ category.name }} Levels - Quiz Master Pro{% endblock %}
+{% block content %}
+<div class="container section">
+    <div class="dash-greet fade-up">
+        <div>
+            <h1><i class="fa-solid {{ category.icon }}" style="color: {{ category.color }}"></i> {{ category.name }} <span>Levels</span></h1>
+            <p class="muted mt-1">{{ category.description }} &middot; {{ max_level }} levels &middot; 10 questions each</p>
+        </div>
+        <a href="{{ url_for('main.categories') }}" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-left"></i> All Categories</a>
+    </div>
+
+    <div class="grid-cards" style="grid-template-columns: 1fr;">
+        {% for item in levels %}
+            {% set lvl = item.level %}
+            <div class="glass level-card fade-up
+                {% if not item.unlocked %}locked{% endif %}
+                {% if item.completed %}completed{% endif %}"
+                 style="--level-color: {{ lvl.color }}">
+                <div class="level-badge">{{ lvl.level_number }}</div>
+                <div class="level-info">
+                    <h3>Level {{ lvl.level_number }} &middot; {{ lvl.name }}</h3>
+                    <span class="lvl-tag">{{ lvl.description }}</span>
+                    {% if item.question_count > 0 %}
+                        <div class="level-progress">
+                            <div class="fill" style="width: {{ item.question_count * 10 }}%;"></div>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="level-actions">
+                    {% if item.question_count == 0 %}
+                        <span class="muted" style="font-size:0.85rem;"><i class="fa-solid fa-circle-exclamation"></i> No questions yet</span>
+                    {% elif not item.unlocked %}
+                        <span class="pill" style="background: rgba(100,116,139,.2); color: var(--text-muted);"><i class="fa-solid fa-lock"></i> Locked</span>
+                        <span class="muted" style="font-size:0.82rem;">Pass Level {{ item.level.level_number - 1 }} to unlock</span>
+                    {% else %}
+                        <span class="pill pill-pass" style="font-size:0.82rem;">
+                            <i class="fa-solid {{ 'fa-check' if item.completed else 'fa-bolt' }}"></i>
+                            {{ 'Completed' if item.completed else 'Ready' }}
+                        </span>
+                        <form method="post" action="{{ url_for('quiz.start') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <input type="hidden" name="category" value="{{ category.name }}">
+                            <input type="hidden" name="level" value="{{ lvl.level_number }}">
+                            <button class="btn btn-sm" type="submit">
+                                <i class="fa-solid {{ 'fa-rotate-right' if item.completed else 'fa-play' }}"></i>
+                                {{ 'Retry' if item.completed else 'Start Quiz' }}
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

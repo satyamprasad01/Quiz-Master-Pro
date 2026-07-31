@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Leaderboard - Quiz Master Pro{% endblock %}
+{% block content %}
+<div class="container section">
+    <div class="section-head fade-up">
+        <h2><i class="fa-solid fa-trophy"></i> Leaderboard</h2>
+        <p>The top attempts ranked by score, percentage and speed.</p>
+    </div>
+
+    <div class="glass leaderboard-table-wrap fade-up">
+        <table class="leaderboard">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Player</th>
+                    <th>Category</th>
+                    <th>Level</th>
+                    <th>Score</th>
+                    <th>Percentage</th>
+                    <th>Time</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in entries %}
+                <tr class="{{ 'me-row' if e.user_id == user_id }}">
+                    <td><span class="rank-badge rank-{{ loop.index if loop.index <= 3 else 'x' }}">{{ loop.index }}</span></td>
+                    <td>
+                        <strong>{{ e.username }}</strong>
+                        {% if e.user_id == user_id %}<span class="pill" style="background: var(--primary); color:#fff;">You</span>{% endif %}
+                    </td>
+                    <td>{{ e.category }}</td>
+                    <td>Level {{ e.level }}</td>
+                    <td class="score-cell">{{ e.score }}/{{ e.total }}</td>
+                    <td>
+                        <span class="pill {{ 'pill-pass' if e.percentage >= 60 else 'pill-fail' }}">{{ e.percentage }}%</span>
+                    </td>
+                    <td>{{ (e.time_taken // 60) }}m {{ '%02d' % (e.time_taken % 60) }}s</td>
+                    <td class="muted">{{ e.date[:16] }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="8"><div class="empty-state"><i class="fa-solid fa-flag-checkered"></i><h3>No attempts yet</h3><p>Be the first to take a quiz and claim the top spot!</p></div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

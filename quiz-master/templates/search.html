@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Search - Quiz Master Pro{% endblock %}
+{% block content %}
+<div class="container section">
+    <div class="section-head fade-up">
+        <h2><i class="fa-solid fa-magnifying-glass"></i> Search</h2>
+        <p>Search categories and levels across the platform.</p>
+    </div>
+
+    <div class="search-bar fade-up">
+        <input type="text" class="input" id="searchInput" value="{{ q }}" placeholder="e.g. Science, Expert, Hard..." aria-label="Search" autofocus>
+        <button class="btn" id="searchBtn" type="button"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+    </div>
+
+    <div class="search-results" id="results">
+        {% if q %}
+            {% if categories or levels %}
+                {% for cat in categories %}
+                <a class="glass search-item" href="{{ url_for('main.levels', category=cat.name) }}">
+                    <span class="s-icon" style="background: {{ cat.color }}"><i class="fa-solid {{ cat.icon }}"></i></span>
+                    <div><h4>{{ cat.name }}</h4><p>Category &middot; {{ cat.description }}</p></div>
+                </a>
+                {% endfor %}
+                {% for lvl in levels %}
+                <a class="glass search-item" href="{{ url_for('main.categories') }}">
+                    <span class="s-icon" style="background: {{ lvl.color }}"><i class="fa-solid fa-signal"></i></span>
+                    <div><h4>{{ lvl.name }} &middot; Level {{ lvl.level_number }}</h4><p>{{ lvl.description }}</p></div>
+                </a>
+                {% endfor %}
+            {% else %}
+                <div class="glass empty-state"><i class="fa-solid fa-circle-question"></i><h3>No results for "{{ q }}"</h3><p>Try a different keyword.</p></div>
+            {% endif %}
+        {% else %}
+            <div class="glass empty-state"><i class="fa-solid fa-keyboard"></i><h3>Type something to search</h3><p>Try "Science", "Expert" or "Computer".</p></div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    const input = document.getElementById('searchInput');
+    const btn = document.getElementById('searchBtn');
+    function go() {
+        const q = input.value.trim();
+        if (q) window.location.href = '/search?q=' + encodeURIComponent(q);
+    }
+    btn.addEventListener('click', go);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+})();
+</script>
+{% endblock %}

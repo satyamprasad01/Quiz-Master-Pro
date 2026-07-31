@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Result - {{ result.category }} Level {{ result.level }} - Quiz Master Pro{% endblock %}
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/quiz.css') }}">
+{% endblock %}
+{% block content %}
+
+<div class="container section" style="padding-top: 40px;">
+
+    <!-- Score card -->
+    <div class="result-hero glass {{ 'result-pass' if passed else 'result-fail' }}">
+        <div class="ring-wrap">
+            <svg viewBox="0 0 200 200" class="score-ring">
+                <defs>
+                    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#6366f1"/>
+                        <stop offset="100%" stop-color="#ec4899"/>
+                    </linearGradient>
+                </defs>
+                <circle class="ring-bg" cx="100" cy="100" r="86"/>
+                <circle class="ring-fg" cx="100" cy="100" r="86"
+                        data-pct="{{ result.percentage }}"/>
+            </svg>
+            <div class="ring-center">
+                <span class="ring-pct" id="ringPct">0%</span>
+                <span class="ring-grade">{{ grade }}</span>
+            </div>
+        </div>
+
+        <div class="result-info">
+            <div class="result-title">
+                <h1>{{ result.category }} &middot; Level {{ result.level }}</h1>
+                <span class="pill {{ 'pill-pass' if passed else 'pill-fail' }}"
+                      style="font-size:0.85rem;">
+                    {{ 'PASSED' if passed else 'FAILED' }}
+                </span>
+            </div>
+            <p class="muted mt-1">{{ message }}</p>
+
+            <div class="result-stats">
+                <div class="r-stat"><i class="fa-solid fa-circle-check" style="color: var(--success)"></i><b>{{ result.score }}</b><span>Correct</span></div>
+                <div class="r-stat"><i class="fa-solid fa-circle-xmark" style="color: var(--danger)"></i><b>{{ result.total - result.score }}</b><span>Wrong</span></div>
+                <div class="r-stat"><i class="fa-solid fa-percent" style="color: var(--primary)"></i><b>{{ result.percentage }}%</b><span>Percentage</span></div>
+                <div class="r-stat"><i class="fa-solid fa-stopwatch" style="color: var(--warning)"></i><b>{{ (result.time_taken // 60) }}m {{ '%02d' % (result.time_taken % 60) }}s</b><span>Time Taken</span></div>
+                <div class="r-stat"><i class="fa-solid fa-ranking-star" style="color: var(--accent)"></i><b>#{{ rank }}</b><span>Rank</span></div>
+            </div>
+
+            <div class="result-actions">
+                <form method="post" action="{{ url_for('quiz.start') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <input type="hidden" name="category" value="{{ result.category }}">
+                    <input type="hidden" name="level" value="{{ result.level }}">
+                    <button class="btn btn-ghost" type="submit"><i class="fa-solid fa-rotate-right"></i> Retry Level</button>
+                </form>
+                {% if passed and next_level %}
+                    <form method="post" action="{{ url_for('quiz.start') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="hidden" name="category" value="{{ result.category }}">
+                        <input type="hidden" name="level" value="{{ next_level }}">
+                        <button class="btn btn-success" type="submit"><i class="fa-solid fa-arrow-right"></i> Next Level</button>
+                    </form>
+                {% endif %}
+                <a href="{{ url_for('main.categories') }}" class="btn btn-ghost"><i class="fa-solid fa-house"></i> Home</a>
+                <button class="btn btn-info" id="exportPdfBtn"><i class="fa-solid fa-file-pdf"></i> Export PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Answer review -->
+    {% if review %}
+    <div class="mt-3">
+        <button class="btn btn-ghost" id="toggleReview">
+            <i class="fa-solid fa-eye"></i> <span>Show Answer Review</span>
+        </button>
+    </div>
+    <div class="review-list mt-2" id="reviewBox" style="display:none;">
+        {% for item in review %}
+        <div class="glass review-item {{ 'correct' if item.is_correct else 'wrong' }}">
+            <span class="r-status {{ 'r-correct' if item.is_correct else 'r-wrong' }}">
+                <i class="fa-solid {{ 'fa-check' if item.is_correct else 'fa-xmark' }}"></i>
+                {{ 'Correct' if item.is_correct else 'Wrong' }}
+            </span>
+            <h4>Q{{ loop.index }}. {{ item.question }}</h4>
+            {% for opt in item.options %}
+                {% set letter = 'ABCD'[loop.index0] %}
+                {% if loop.index0 == item.correct %}
+                    <div class="review-opt right"><b>{{ letter }}.</b> {{ opt }} <i class="fa-solid fa-check" style="color: var(--success)"></i></div>
+                {% elif loop.index0 == item.chosen %}
+                    <div class="review-opt wrong"><b>{{ letter }}.</b> {{ opt }} <i class="fa-solid fa-xmark" style="color: var(--danger)"></i></div>
+                {% else %}
+                    <div class="review-opt neutral"><b>{{ letter }}.</b> {{ opt }}</div>
+                {% endif %}
+            {% endfor %}
+            {% if item.chosen is none %}
+                <div class="review-opt wrong"><b>&mdash;.</b> Not answered</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    const QMP = window.QMP;
+
+    // Animate the ring + percentage counter.
+    const fg = document.querySelector('.ring-fg');
+    const pctEl = document.getElementById('ringPct');
+    const target = parseFloat(fg.dataset.pct);
+    const C = 2 * Math.PI * 86;
+    fg.style.strokeDasharray = C;
+    fg.style.strokeDashoffset = C;
+
+    let current = 0;
+    const duration = 1400;
+    const start = performance.now();
+    function frame(now) {
+        const t = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - t, 3);
+        current = target * eased;
+        pctEl.textContent = Math.round(current) + '%';
+        fg.style.strokeDashoffset = C * (1 - eased * (target / 100));
+        if (t < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+
+    const ring = document.querySelector('.score-ring');
+    const passed = document.querySelector('.result-hero').classList.contains('result-pass');
+    setTimeout(() => { passed ? QMP.playWin() : QMP.playLose(); }, 800);
+
+    // Answer review toggle.
+    const toggleBtn = document.getElementById('toggleReview');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+            const box = document.getElementById('reviewBox');
+            const hidden = box.style.display === 'none';
+            box.style.display = hidden ? 'flex' : 'none';
+            toggleBtn.querySelector('span').textContent = hidden ? 'Hide Answer Review' : 'Show Answer Review';
+            if (hidden) box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    }
+
+    // PDF export via the browser print dialog (result + review).
+    document.getElementById('exportPdfBtn').addEventListener('click', () => {
+        const review = document.getElementById('reviewBox');
+        const wasHidden = review && review.style.display === 'none';
+        if (wasHidden) review.style.display = 'flex';
+        window.print();
+        if (wasHidden) review.style.display = 'none';
+    });
+})();
+</script>
+{% endblock %}

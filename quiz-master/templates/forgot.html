@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Forgot Password - Quiz Master Pro{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+    <div class="glass auth-card fade-up">
+        <h1><i class="fa-solid fa-key"></i> Forgot Password</h1>
+        <p class="sub">Enter the email on your account and we'll send you a reset code.</p>
+        <form method="post" action="{{ url_for('auth.forgot') }}" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input class="input" type="email" id="email" name="email" placeholder="you@example.com" required autofocus>
+            </div>
+            <button class="btn btn-block" type="submit"><i class="fa-solid fa-paper-plane"></i> Send Reset Code</button>
+        </form>
+        <div class="auth-alt">Remembered it? <a href="{{ url_for('auth.login') }}">Back to login</a></div>
+    </div>
+</div>
+{% endblock %}

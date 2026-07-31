@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Users - Admin{% endblock %}
+{% block content %}
+<div class="container section" style="padding-top: 40px;">
+    <div class="dash-greet">
+        <div>
+            <h1>Manage <span>Users</span></h1>
+            <p class="muted mt-1">{{ users|length }} registered accounts.</p>
+        </div>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-left"></i> Admin Panel</a>
+    </div>
+
+    <div class="glass table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th><th>Username</th><th>Email</th><th>Role</th><th>Joined</th><th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td>{{ u.id }}</td>
+                    <td><strong>{{ u.username }}</strong></td>
+                    <td>{{ u.email }}</td>
+                    <td><span class="pill {{ 'pill-fail' if u.role == 'admin' else 'pill-pass' }}">{{ u.role }}</span></td>
+                    <td>{{ u.created_at[:16] }}</td>
+                    <td>
+                        {% if u.role != 'admin' %}
+                        <button class="btn btn-xs btn-warning" onclick='window.openModal("resetModal{{ u.id }}")'><i class="fa-solid fa-rotate-left"></i> Reset Progress</button>
+                        {% else %}
+                        <span class="muted">-</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% for u in users %}
+{% if u.role != 'admin' %}
+<div class="modal-overlay" id="resetModal{{ u.id }}">
+    <div class="glass modal">
+        <h3>Reset progress for "{{ u.username }}"?</h3>
+        <p class="muted">All their quiz results and unlocked levels will be cleared.</p>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" type="button" data-close-modal>Cancel</button>
+            <form method="post" action="{{ url_for('admin.user_reset', uid=u.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button class="btn btn-warning" type="submit"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+{% endblock %}

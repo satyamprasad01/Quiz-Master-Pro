@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Manage Levels - Admin{% endblock %}
+{% block content %}
+<div class="container section" style="padding-top: 40px;">
+    <div class="dash-greet">
+        <div>
+            <h1>Manage <span>Levels</span></h1>
+            <p class="muted mt-1">{{ levels|length }} difficulty levels.</p>
+        </div>
+        <div class="flex gap-2">
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-left"></i> Admin Panel</a>
+            <button class="btn btn-sm" onclick="window.openModal('addModal')"><i class="fa-solid fa-plus"></i> Add Level</button>
+        </div>
+    </div>
+
+    <div class="grid-cards" style="grid-template-columns:1fr;">
+        {% for l in levels %}
+        <div class="glass level-card" style="--level-color: {{ l.color }}">
+            <div class="level-badge">{{ l.level_number }}</div>
+            <div class="level-info">
+                <h3>Level {{ l.level_number }} &middot; {{ l.name }}</h3>
+                <span class="lvl-tag">{{ l.description }}</span>
+            </div>
+            <div class="level-actions">
+                <button class="btn btn-xs btn-ghost" onclick='window.openModal("editModal{{ l.id }}")'><i class="fa-solid fa-pen"></i> Edit</button>
+                <button class="btn btn-xs btn-danger" onclick='window.openModal("delModal{{ l.id }}")'><i class="fa-solid fa-trash"></i> Delete</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="modal-overlay" id="addModal">
+    <div class="glass modal">
+        <h3>Add Level</h3>
+        <form method="post" action="{{ url_for('admin.level_add') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="form-group"><label>Level Number</label><input name="level_number" type="number" min="1" class="input" required placeholder="e.g. 6"></div>
+            <div class="form-group"><label>Name</label><input name="name" class="input" required placeholder="e.g. Master"></div>
+            <div class="form-group"><label>Color</label><input name="color" type="color" class="input" value="#6366f1"></div>
+            <div class="form-group"><label>Description</label><textarea name="description" class="input" rows="2"></textarea></div>
+            <div class="modal-actions">
+                <button class="btn btn-ghost" type="button" data-close-modal>Cancel</button>
+                <button class="btn" type="submit"><i class="fa-solid fa-plus"></i> Add</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% for l in levels %}
+<div class="modal-overlay" id="editModal{{ l.id }}">
+    <div class="glass modal">
+        <h3>Edit Level</h3>
+        <form method="post" action="{{ url_for('admin.level_edit', lid=l.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="form-group"><label>Level Number</label><input name="level_number" type="number" min="1" class="input" value="{{ l.level_number }}" required></div>
+            <div class="form-group"><label>Name</label><input name="name" class="input" value="{{ l.name }}" required></div>
+            <div class="form-group"><label>Color</label><input name="color" type="color" class="input" value="{{ l.color }}"></div>
+            <div class="form-group"><label>Description</label><textarea name="description" class="input" rows="2">{{ l.description }}</textarea></div>
+            <div class="modal-actions">
+                <button class="btn btn-ghost" type="button" data-close-modal>Cancel</button>
+                <button class="btn btn-info" type="submit"><i class="fa-solid fa-save"></i> Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="delModal{{ l.id }}">
+    <div class="glass modal">
+        <h3>Delete Level {{ l.level_number }}?</h3>
+        <p class="muted">All questions for this level will also be removed.</p>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" type="button" data-close-modal>Cancel</button>
+            <form method="post" action="{{ url_for('admin.level_delete', lid=l.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button class="btn btn-danger" type="submit"><i class="fa-solid fa-trash"></i> Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

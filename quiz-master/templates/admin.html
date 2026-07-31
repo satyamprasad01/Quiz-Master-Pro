@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Admin Panel - Quiz Master Pro{% endblock %}
+{% block content %}
+<div class="container section" style="padding-top: 40px;">
+    <div class="dash-greet">
+        <div>
+            <h1>Admin <span>Panel</span> <i class="fa-solid fa-shield-halved"></i></h1>
+            <p class="muted mt-1">Analytics and management for Quiz Master Pro.</p>
+        </div>
+        <div class="flex gap-2 wrap">
+            <a href="{{ url_for('admin.questions_page') }}" class="btn btn-info btn-sm"><i class="fa-solid fa-list-check"></i> Questions</a>
+            <a href="{{ url_for('admin.categories_page') }}" class="btn btn-sm"><i class="fa-solid fa-layer-group"></i> Categories</a>
+            <a href="{{ url_for('admin.levels_page') }}" class="btn btn-warning btn-sm"><i class="fa-solid fa-signal"></i> Levels</a>
+            <a href="{{ url_for('admin.users_page') }}" class="btn btn-success btn-sm"><i class="fa-solid fa-users"></i> Users</a>
+            <a href="{{ url_for('admin.scores_page') }}" class="btn btn-ghost btn-sm"><i class="fa-solid fa-square-poll-vertical"></i> Scores</a>
+        </div>
+    </div>
+
+    <!-- Stat cards (filled by JS) -->
+    <div class="admin-stats" id="adminStatCards">
+        <div class="glass mini-stat"><div class="skeleton" style="width:52px;height:52px;"></div><div style="flex:1"><div class="skeleton" style="height:26px;"></div><div class="skeleton" style="height:14px;margin-top:8px;"></div></div></div>
+        <div class="glass mini-stat"><div class="skeleton" style="width:52px;height:52px;"></div><div style="flex:1"><div class="skeleton" style="height:26px;"></div><div class="skeleton" style="height:14px;margin-top:8px;"></div></div></div>
+        <div class="glass mini-stat"><div class="skeleton" style="width:52px;height:52px;"></div><div style="flex:1"><div class="skeleton" style="height:26px;"></div><div class="skeleton" style="height:14px;margin-top:8px;"></div></div></div>
+        <div class="glass mini-stat"><div class="skeleton" style="width:52px;height:52px;"></div><div style="flex:1"><div class="skeleton" style="height:26px;"></div><div class="skeleton" style="height:14px;margin-top:8px;"></div></div></div>
+    </div>
+
+    <div class="chart-grid">
+        <div class="glass chart-card">
+            <h3><i class="fa-solid fa-layer-group"></i> Questions per Category</h3>
+            <div class="chart-box"><canvas id="catChart"></canvas></div>
+        </div>
+        <div class="glass chart-card">
+            <h3><i class="fa-solid fa-signal"></i> Questions per Level</h3>
+            <div class="chart-box"><canvas id="levelChart"></canvas></div>
+        </div>
+    </div>
+
+    <div class="glass chart-card">
+        <h3><i class="fa-solid fa-clock-rotate-left"></i> Attempts per Day (last 14)</h3>
+        <div class="chart-box" style="height:220px;"><canvas id="dayChart"></canvas></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+    const QMP = window.QMP;
+    const gridColor = () => 'rgba(99,102,241,0.12)';
+    const textColor = () => document.documentElement.getAttribute('data-theme') === 'dark' ? '#e8e8ff' : '#1e1b4b';
+
+    QMP.apiFetch('/api/admin/stats')
+        .then(s => {
+            // Stat cards
+            const colors = [['#6366f1', 'fa-users', s.users, 'Registered Users'],
+                            ['#8b5cf6', 'fa-list-check', s.questions, 'Questions'],
+                            ['#10b981', 'fa-square-poll-vertical', s.results, 'Attempts'],
+                            ['#f59e0b', 'fa-percent', s.avg_score + '%', 'Average Score']];
+            document.getElementById('adminStatCards').innerHTML = colors.map(c =>
+                `<div class="glass mini-stat">
+                    <div class="m-icon" style="background:${c[0]}"><i class="fa-solid ${c[1]}"></i></div>
+                    <div><div class="m-val">${c[2]}</div><div class="m-lbl">${c[3]}</div></div>
+                </div>`).join('');
+
+            if (!window.Chart) return;
+            Chart.defaults.font.family = "'Poppins', sans-serif";
+            Chart.defaults.color = textColor();
+
+            new Chart(document.getElementById('catChart'), {
+                type: 'bar',
+                data: {
+                    labels: s.per_category.map(c => c.category),
+                    datasets: [{ label: 'Questions', data: s.per_category.map(c => c.count),
+                        backgroundColor: ['#6366f1','#0984e3','#00b894','#e17055'], borderRadius: 8 }],
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                    scales: { x: { grid: { color: gridColor() } }, y: { beginAtZero: true, grid: { color: gridColor() } } } },
+            });
+
+            new Chart(document.getElementById('levelChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: s.per_level.map(l => 'L' + l.level + ' ' + l.name),
+                    datasets: [{ data: s.per_level.map(l => l.count),
+                        backgroundColor: ['#00b894','#00cec9','#0984e3','#e17055','#d63031'], borderWidth: 0, hoverOffset: 8 }],
+                },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '58%',
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12 } } } },
+            });
+
+            new Chart(document.getElementById('dayChart'), {
+                type: 'line',
+                data: {
+                    labels: s.attempts_per_day.map(d => d.label),
+                    datasets: [{ label: 'Attempts', data: s.attempts_per_day.map(d => d.count),
+                        borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.15)', fill: true, tension: 0.4, pointRadius: 4 }],
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                    scales: { x: { grid: { color: gridColor() } }, y: { beginAtZero: true, grid: { color: gridColor() }, ticks: { precision: 0 } } } },
+            });
+        })
+        .catch(err => console.error('Failed to load admin stats:', err.message));
+})();
+</script>
+{% endblock %}

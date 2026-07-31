@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}Manage Questions - Admin{% endblock %}
+{% block content %}
+<div class="container section" style="padding-top: 40px;">
+    <div class="dash-greet">
+        <div>
+            <h1>Manage <span>Questions</span></h1>
+            <p class="muted mt-1">{{ rows|length }} question(s) shown.</p>
+        </div>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-left"></i> Admin Panel</a>
+    </div>
+
+    <div class="glass admin-toolbar">
+        <form method="get" class="filter-row">
+            <select name="category" class="select" onchange="this.form.submit()">
+                <option value="">All Categories</option>
+                {% for c in categories %}
+                    <option value="{{ c.name }}" {{ 'selected' if c.name == selected_category }}>{{ c.name }}</option>
+                {% endfor %}
+            </select>
+            <select name="level" class="select" onchange="this.form.submit()">
+                <option value="">All Levels</option>
+                {% for l in levels %}
+                    <option value="{{ l.level_number }}" {{ 'selected' if l.level_number == selected_level }}>Level {{ l.level_number }} - {{ l.name }}</option>
+                {% endfor %}
+            </select>
+            <button class="btn btn-ghost btn-sm" type="submit"><i class="fa-solid fa-filter"></i> Filter</button>
+        </form>
+        <button class="btn btn-sm" onclick="window.openModal('addModal')"><i class="fa-solid fa-plus"></i> Add Question</button>
+    </div>
+
+    <div class="glass table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th><th>Category</th><th>Level</th><th>Question</th>
+                    <th>Correct</th><th style="width:130px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for q in rows %}
+                <tr>
+                    <td>{{ q.id }}</td>
+                    <td>{{ q.category }}</td>
+                    <td>L{{ q.level }}</td>
+                    <td style="max-width:340px;">{{ q.question }}</td>
+                    <td>{{ q['option' ~ q.correct_option] }}</td>
+                    <td>
+                        <div class="actions">
+                            <button class="btn btn-xs btn-ghost" onclick='window.openModal("editModal{{ q.id }}")'><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn btn-xs btn-danger" onclick='window.openModal("delModal{{ q.id }}")'><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-circle-question"></i><h3>No questions found</h3><p>Adjust your filters or add a new question.</p></div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add modal -->
+<div class="modal-overlay" id="addModal">
+    <div class="glass modal">
+        <h3>Add Question</h3>
+        <form method="post" action="{{ url_for('admin.question_add') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="filter-row" style="margin-bottom:14px;">
+                <select name="category" class="select" required>
+                    {% for c in categories %}<option value="{{ c.name }}">{{ c.name }}</option>{% endfor %}
+                </select>
+                <select name="level" class="select" required>
+                    {% for l in levels %}<option value="{{ l.level_number }}">Level {{ l.level_number }} - {{ l.name }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Question</label>
+                <textarea name="question" class="input" rows="2" required></textarea>
+            </div>
+            {% for i in range(1, 5) %}
+            <div class="form-group">
+                <label>Option {{ i }}</label>
+                <input name="option{{ i }}" class="input" required>
+            </div>
+            {% endfor %}
+            <div class="form-group">
+                <label>Correct Option</label>
+                <select name="correct_option" class="select" required>
+                    <option value="1">Option 1</option>
+                    <option value="2">Option 2</option>
+                    <option value="3">Option 3</option>
+                    <option value="4">Option 4</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-ghost" type="button" data-close-modal>Cancel</button>
+                <button class="btn" type="submit"><i class="fa-solid fa-plus"></i> Add</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit / Delete modals -->
+{% for q in rows %}
+<div class="modal-overlay" id="editModal{{ q.id }}">
+    <div class="glass modal">
+        <h3>Edit Question #{{ q.id }}</h3>
+        <form method="post" action="{{ url_for('admin.question_edit', qid=q.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="filter-row" style="margin-bottom:14px;">
+                <select name="category" class="select" required>
+                    {% for c in categories %}<option value="{{ c.name }}" {{ 'selected' if c.name == q.category }}>{{ c.name }}</option>{% endfor %}
+                </select>
+                <select name="level" class="select" required>
+                    {% for l in levels %}<option value="{{ l.level_number }}" {{ 'selected' if l.level_number == q.level }}>Level {{ l.level_number }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-group"><label>Question</label><textarea name="question" class="input" rows="2" required>{{ q.question }}</textarea></div>
+            {% for i in range(1, 5) %}
+            <div class="form-group"><label>Option {{ i }}</label><input name="option{{ i }}" class="input" value="{{ q['option' ~ i] }}" required></div>
+            {% endfor %}
+            <div class="form-group">
+                <label>Correct Option</label>
+                <select name="correct_option" class="select" required>
+                    {% for i in range(1, 5) %}<option value="{{ i }}" {{ 'selected' if i == q.correct_option }}>Option {{ i }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-ghost" type="button" data-close-modal>Cancel</button>
+                <button class="btn btn-info" type="submit"><i class="fa-solid fa-save"></i> Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="delModal{{ q.id }}">
+    <div class="glass modal">
+        <h3>Delete Question #{{ q.id }}?</h3>
+        <p class="muted">This action cannot be undone.</p>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" type="button" data-close-modal>Cancel</button>
+            <form method="post" action="{{ url_for('admin.question_delete', qid=q.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button class="btn btn-danger" type="submit"><i class="fa-solid fa-trash"></i> Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

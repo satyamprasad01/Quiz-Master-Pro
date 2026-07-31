@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>{% block title %}Quiz Master Pro{% endblock %}</title>
+    <link rel="icon" href="https://img.icons8.com/fluency/48/quiz.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block styles %}{% endblock %}
+</head>
+<body>
+
+    <!-- Loading screen -->
+    <div id="loader" class="loader">
+        <div class="loader-inner">
+            <div class="loader-ring"></div>
+            <span>Quiz Master Pro</span>
+        </div>
+    </div>
+
+    <!-- Animated background blobs -->
+    <div class="bg-anim" aria-hidden="true">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <header class="navbar">
+        <div class="container nav-inner">
+            <a href="{{ url_for('main.index') }}" class="brand">
+                <span class="brand-icon"><i class="fa-solid fa-brain"></i></span>
+                Quiz<span class="brand-accent">Master</span> Pro
+            </a>
+
+            <nav class="nav-links" id="navLinks">
+                <a href="{{ url_for('main.index') }}"><i class="fa-solid fa-house"></i> Home</a>
+                {% if session.get('user_id') %}
+                    <a href="{{ url_for('main.categories') }}"><i class="fa-solid fa-layer-group"></i> Categories</a>
+                    <a href="{{ url_for('main.leaderboard') }}"><i class="fa-solid fa-trophy"></i> Leaderboard</a>
+                    <a href="{{ url_for('main.dashboard') }}"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+                    {% if session.get('role') == 'admin' %}
+                        <a href="{{ url_for('admin.dashboard') }}" class="admin-link"><i class="fa-solid fa-shield-halved"></i> Admin</a>
+                    {% endif %}
+                {% endif %}
+            </nav>
+
+            <div class="nav-actions">
+                <button id="themeToggle" class="icon-btn" title="Toggle dark mode" aria-label="Toggle dark mode">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+                {% if session.get('user_id') %}
+                    <div class="user-chip">
+                        <i class="fa-solid fa-circle-user"></i>
+                        <span>{{ session['username'] }}</span>
+                    </div>
+                    <form method="post" action="{{ url_for('auth.logout') }}" class="inline-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <button class="btn btn-ghost btn-sm" type="submit"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+                    </form>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-right-to-bracket"></i> Login</a>
+                    <a href="{{ url_for('auth.signup') }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-user-plus"></i> Sign Up</a>
+                {% endif %}
+                <button class="icon-btn hamburger" id="hamburger" aria-label="Menu"><i class="fa-solid fa-bars"></i></button>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-wrap">
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-stack container">
+                    {% for category, message in messages %}
+                        <div class="flash flash-{{ category }}">
+                            <i class="fa-solid fa-circle-info"></i>
+                            <span>{{ message }}</span>
+                            <button class="flash-close" aria-label="Dismiss">&times;</button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="container footer-grid">
+            <div>
+                <span class="brand"><span class="brand-icon"><i class="fa-solid fa-brain"></i></span>Quiz<span class="brand-accent">Master</span> Pro</span>
+                <p class="muted">Test your knowledge across Science, Mathematics, General Knowledge and Computer — one level at a time.</p>
+            </div>
+            <div>
+                <h4>Explore</h4>
+                <a href="{{ url_for('main.index') }}">Home</a>
+                <a href="{{ url_for('main.categories') }}">Categories</a>
+                <a href="{{ url_for('main.leaderboard') }}">Leaderboard</a>
+                <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
+            </div>
+            <div>
+                <h4>Account</h4>
+                {% if session.get('user_id') %}
+                    <a href="{{ url_for('main.dashboard') }}">My Dashboard</a>
+                    <a href="{{ url_for('auth.logout') }}">Logout</a>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}">Login</a>
+                    <a href="{{ url_for('auth.signup') }}">Sign Up</a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="container footer-bottom">
+            <span>&copy; {{ now_year or 2026 }} Quiz Master Pro. Built with Flask &amp; love.</span>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/js/all.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

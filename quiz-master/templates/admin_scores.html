@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Scores - Admin{% endblock %}
+{% block content %}
+<div class="container section" style="padding-top: 40px;">
+    <div class="dash-greet">
+        <div>
+            <h1>All <span>Scores</span></h1>
+            <p class="muted mt-1">{{ results|length }} attempts recorded.</p>
+        </div>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-left"></i> Admin Panel</a>
+    </div>
+
+    <div class="glass table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th><th>User</th><th>Category</th><th>Level</th>
+                    <th>Score</th><th>Percentage</th><th>Time</th><th>Date</th><th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in results %}
+                <tr>
+                    <td>{{ r.id }}</td>
+                    <td><strong>{{ r.username }}</strong></td>
+                    <td>{{ r.category }}</td>
+                    <td>L{{ r.level }}</td>
+                    <td>{{ r.score }}/{{ r.total }}</td>
+                    <td><span class="pill {{ 'pill-pass' if r.percentage >= 60 else 'pill-fail' }}">{{ r.percentage }}%</span></td>
+                    <td>{{ (r.time_taken // 60) }}m {{ '%02d' % (r.time_taken % 60) }}s</td>
+                    <td>{{ r.date[:16] }}</td>
+                    <td>
+                        <button class="btn btn-xs btn-danger" onclick='window.openModal("delModal{{ r.id }}")'><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="9"><div class="empty-state"><i class="fa-solid fa-square-poll-vertical"></i><h3>No attempts yet</h3></div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% for r in results %}
+<div class="modal-overlay" id="delModal{{ r.id }}">
+    <div class="glass modal">
+        <h3>Delete result #{{ r.id }}?</h3>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" type="button" data-close-modal>Cancel</button>
+            <form method="post" action="{{ url_for('admin.score_delete', rid=r.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button class="btn btn-danger" type="submit"><i class="fa-solid fa-trash"></i> Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

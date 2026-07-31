@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Quiz Master Pro{% endblock %}
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+{% block content %}
+<div class="container section" style="padding-top: 40px;">
+
+    <div class="dash-greet fade-up">
+        <div>
+            <h1>Welcome back, <span>{{ session['username'] }}</span> <i class="fa-solid fa-hand-sparkles"></i></h1>
+            <p class="muted mt-1">Here's your quiz journey so far. Keep going!</p>
+        </div>
+        {% if continue_quiz %}
+            <form method="post" action="{{ url_for('quiz.start') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <input type="hidden" name="category" value="{{ continue_quiz.category }}">
+                <input type="hidden" name="level" value="{{ continue_quiz.level }}">
+                <button class="btn btn-lg" type="submit"><i class="fa-solid fa-play"></i> Continue Quiz</button>
+            </form>
+        {% else %}
+            <a href="{{ url_for('main.categories') }}" class="btn btn-lg"><i class="fa-solid fa-play"></i> Start a Quiz</a>
+        {% endif %}
+    </div>
+
+    <!-- Stats -->
+    <div class="stat-grid">
+        <div class="glass mini-stat">
+            <div class="m-icon" style="background: linear-gradient(135deg,#10b981,#059669);"><i class="fa-solid fa-layer-group"></i></div>
+            <div><div class="m-val">{{ stats.completed_levels }}</div><div class="m-lbl">Completed Levels</div></div>
+        </div>
+        <div class="glass mini-stat">
+            <div class="m-icon" style="background: linear-gradient(135deg,#64748b,#475569);"><i class="fa-solid fa-lock"></i></div>
+            <div><div class="m-val">{{ stats.locked_levels }}</div><div class="m-lbl">Locked Levels</div></div>
+        </div>
+        <div class="glass mini-stat">
+            <div class="m-icon" style="background: linear-gradient(135deg,#f59e0b,#d97706);"><i class="fa-solid fa-medal"></i></div>
+            <div><div class="m-val">{{ stats.highest_score }}%</div><div class="m-lbl">Highest Score</div></div>
+        </div>
+        <div class="glass mini-stat">
+            <div class="m-icon" style="background: linear-gradient(135deg,#6366f1,#8b5cf6);"><i class="fa-solid fa-chart-line"></i></div>
+            <div><div class="m-val">{{ stats.average_score }}%</div><div class="m-lbl">Average Score</div></div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="chart-grid">
+        <div class="glass chart-card">
+            <h3><i class="fa-solid fa-clock-rotate-left"></i> Attempts (last 14 days)</h3>
+            <div class="chart-box"><canvas id="attemptsChart"></canvas></div>
+        </div>
+        <div class="glass chart-card">
+            <h3><i class="fa-solid fa-chart-pie"></i> Avg. Score by Category</h3>
+            <div class="chart-box"><canvas id="categoryChart"></canvas></div>
+        </div>
+    </div>
+
+    <div class="chart-grid">
+        <div class="glass chart-card">
+            <h3><i class="fa-solid fa-wave-square"></i> Score Trend</h3>
+            <div class="chart-box"><canvas id="trendChart"></canvas></div>
+        </div>
+        <div class="glass chart-card">
+            <h3><i class="fa-solid fa-medal"></i> Achievement Badges</h3>
+            <div id="badgesBox">
+                <div class="skeleton" style="height:52px;"></div>
+                <div class="skeleton" style="height:52px; margin-top:10px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dash-grid-2">
+        <!-- Recent attempts -->
+        <div class="glass chart-card">
+            <h3><i class="fa-solid fa-clock-rotate-left"></i> Recent Attempts</h3>
+            <div class="attempt-list">
+                {% for r in recent %}
+                <a class="attempt-row glass" href="{{ url_for('main.result', result_id=r.id) }}" style="text-decoration:none;">
+                    <span class="a-cat-icon" style="background: {{ r.category|category_color }}"><i class="fa-solid {{ r.category|category_icon }}"></i></span>
+                    <div class="a-main">
+                        <div class="t">{{ r.category }} &middot; Level {{ r.level }}</div>
+                        <div class="s">{{ r.score }}/{{ r.total }} &middot; {{ (r.time_taken // 60) }}m {{ '%02d' % (r.time_taken % 60) }}s &middot; {{ r.date[:16] }}</div>
+                    </div>
+                    <span class="a-pct {{ 'pct-pass' if r.percentage >= 60 else 'pct-fail' }}">{{ r.percentage }}%</span>
+                </a>
+                {% else %}
+                <div class="empty-state"><i class="fa-solid fa-flag-checkered"></i><h3>No attempts yet</h3><p>Your quiz results will show up here.</p></div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Category progress -->
+        <div class="glass chart-card">
+            <h3><i class="fa-solid fa-layer-group"></i> Category Progress</h3>
+            <div class="cat-progress-list">
+                {% for cat in categories %}
+                {% set prog = progress.get(cat.name, {'unlocked': 1, 'completed': []}) %}
+                {% set pct = (prog.completed|length * 100 // (level_count if level_count else 5)) %}
+                <div class="cat-prog-item">
+                    <div class="cp-head">
+                        <span><i class="fa-solid {{ cat.icon }}" style="color: {{ cat.color }}"></i> {{ cat.name }}</span>
+                        <span class="muted">{{ prog.completed|length }}/{{ level_count }}</span>
+                    </div>
+                    <div class="cp-bar"><div class="cp-fill" style="width: {{ pct }}%; background: {{ cat.color }};"></div></div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <h3 class="mt-3"><i class="fa-solid fa-trophy"></i> Leaderboard Top 5</h3>
+            <div class="attempt-list">
+                {% for e in leaderboard %}
+                <div class="attempt-row" style="padding: 10px 12px;">
+                    <span class="rank-badge rank-{{ loop.index if loop.index <= 3 else 'x' }}">{{ loop.index }}</span>
+                    <div class="a-main">
+                        <div class="t">{{ e.username }}</div>
+                        <div class="s">{{ e.category }} &middot; Level {{ e.level }}</div>
+                    </div>
+                    <span class="a-pct {{ 'pct-pass' if e.percentage >= 60 else 'pct-fail' }}">{{ e.percentage }}%</span>
+                </div>
+                {% else %}
+                <p class="muted">No scores yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

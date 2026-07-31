@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Categories - Quiz Master Pro{% endblock %}
+{% block content %}
+<div class="container section">
+    <div class="section-head fade-up">
+        <h2>Choose a Category</h2>
+        <p>Each category has {{ level_count }} levels. Pass a level to unlock the next one.</p>
+    </div>
+
+    <div class="search-bar fade-up">
+        <input type="text" class="input" id="categorySearch" placeholder="Search categories & levels..." aria-label="Search">
+        <button class="btn" id="searchBtn" type="button"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+    </div>
+    <div id="searchSuggest" class="search-results" style="display:none;"></div>
+
+    <div class="grid-cards" id="categoryGrid">
+        {% for cat in categories %}
+            {% set prog = progress.get(cat.name, {'unlocked': 1, 'completed': []}) %}
+            {% set pct = (prog.completed | length * 100 // level_count) %}
+            <div class="glass cat-card fade-up" data-search="{{ cat.name|lower }} {{ cat.description|lower }}"
+                 style="--card-color: {{ cat.color }}">
+                <div class="cat-icon" style="background: {{ cat.color }}; box-shadow: 0 10px 24px {{ cat.color }}66;">
+                    <i class="fa-solid {{ cat.icon }}"></i>
+                </div>
+                <h3>{{ cat.name }}</h3>
+                <p>{{ cat.description }}</p>
+                <div class="cat-progress-bar"><div class="cat-progress-fill" style="width: {{ pct }}%; background: {{ cat.color }};"></div></div>
+                <div class="cat-meta">
+                    <span><i class="fa-solid fa-layer-group"></i> {{ prog.unlocked }}/{{ level_count }} unlocked</span>
+                    <span><i class="fa-solid fa-circle-check"></i> {{ prog.completed|length }} completed</span>
+                </div>
+                <a href="{{ url_for('main.levels', category=cat.name) }}" class="btn" style="background: {{ cat.color }}; box-shadow: 0 8px 20px {{ cat.color }}66;">
+                    <i class="fa-solid fa-arrow-right"></i> Play {{ cat.name }}
+                </a>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    const input = document.getElementById('categorySearch');
+    const grid = document.getElementById('categoryGrid');
+    const suggest = document.getElementById('searchSuggest');
+    const searchBtn = document.getElementById('searchBtn');
+
+    function doSearch() {
+        const q = input.value.trim().toLowerCase();
+        if (q.length >= 2) {
+            const cards = Array.from(document.querySelectorAll('.cat-card'));
+            cards.forEach(card => {
+                const hay = (card.dataset.search || '').toLowerCase();
+                card.style.display = hay.includes(q) ? '' : 'none';
+            });
+            window.QMP.apiFetch('/api/search?q=' + encodeURIComponent(q))
+                .then(items => {
+                    if (!items.length) { suggest.style.display = 'none'; return; }
+                    suggest.style.display = 'grid';
+                    suggest.innerHTML = items.map(item => {
+                        if (item.type === 'category') {
+                            return `<a class="glass search-item" href="/levels/${encodeURIComponent(item.name)}">
+                                <span class="s-icon" style="background:${item.color}"><i class="fa-solid ${item.icon}"></i></span>
+                                <div><h4>${window.QMP.escapeHtml(item.name)}</h4><p>Category</p></div>
+                            </a>`;
+                        }
+                        return `<a class="glass search-item" href="/search?q=${encodeURIComponent(item.name)}">
+                            <span class="s-icon" style="background:${item.color}"><i class="fa-solid fa-signal"></i></span>
+                            <div><h4>${window.QMP.escapeHtml(item.name)} (Level ${item.number})</h4><p>Level</p></div>
+                        </a>`;
+                    }).join('');
+                })
+                .catch(() => { suggest.style.display = 'none'; });
+        } else {
+            cardsReset();
+        }
+    }
+    function cardsReset() {
+        document.querySelectorAll('.cat-card').forEach(card => card.style.display = '');
+        suggest.style.display = 'none';
+    }
+    input.addEventListener('input', doSearch);
+    searchBtn.addEventListener('click', doSearch);
+    input.addEventListener('keydown', e => { if (e.key === 'Escape') { input.value = ''; cardsReset(); } });
+})();
+</script>
+{% endblock %}

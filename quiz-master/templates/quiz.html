@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Quiz - {{ category }} Level {{ level }} - Quiz Master Pro{% endblock %}
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/quiz.css') }}">
+{% endblock %}
+{% block content %}
+
+<div class="quiz-shell">
+    <!-- Quiz header -->
+    <header class="quiz-header glass" id="quizHeader">
+        <div class="quiz-meta">
+            <span class="quiz-cat"><i class="fa-solid fa-layer-group"></i> {{ category }}</span>
+            <span class="quiz-lvl"><i class="fa-solid fa-signal"></i> Level {{ level }}</span>
+        </div>
+        <div class="quiz-timer" id="timerBox">
+            <i class="fa-solid fa-stopwatch"></i>
+            <span id="timerText">10:00</span>
+        </div>
+        <div class="quiz-progress">
+            <div class="qp-label"><span id="answeredCount">0</span> / <span id="totalCount">{{ question_count }}</span> answered</div>
+            <div class="qp-bar"><div class="qp-fill" id="qpFill" style="width:0%"></div></div>
+        </div>
+        <button class="icon-btn" id="fullscreenBtn" title="Toggle full screen" aria-label="Toggle full screen">
+            <i class="fa-solid fa-expand"></i>
+        </button>
+    </header>
+
+    <div class="quiz-body">
+        <!-- Question palette -->
+        <aside class="palette glass" id="palette">
+            <h3>Questions</h3>
+            <div class="palette-grid" id="paletteGrid"></div>
+            <div class="palette-legend">
+                <span><i class="dot dot-current"></i> Current</span>
+                <span><i class="dot dot-answered"></i> Answered</span>
+                <span><i class="dot dot-unanswered"></i> Unanswered</span>
+            </div>
+            <button class="btn btn-danger btn-block" id="submitBtnMain">
+                <i class="fa-solid fa-paper-plane"></i> Submit Quiz
+            </button>
+        </aside>
+
+        <!-- Question area -->
+        <main class="question-area glass">
+            <div class="q-head">
+                <span class="q-number">Question <b id="qNum">1</b> of {{ question_count }}</span>
+                <span class="q-level-tag">{{ category }} &middot; Level {{ level }}</span>
+            </div>
+            <h2 class="q-text" id="qText">Loading question...</h2>
+            <div class="options" id="options"></div>
+
+            <div class="q-nav">
+                <button class="btn btn-ghost" id="prevBtn"><i class="fa-solid fa-arrow-left"></i> Previous</button>
+                <button class="btn" id="nextBtn">Next <i class="fa-solid fa-arrow-right"></i></button>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Submit confirmation modal -->
+<div class="modal-overlay" id="submitModal">
+    <div class="glass modal">
+        <h3><i class="fa-solid fa-circle-question"></i> Confirm Submission</h3>
+        <p class="muted" id="confirmText">Are you sure you want to submit your quiz?</p>
+        <p class="mt-1" style="font-size:0.88rem; color: var(--warning);"><i class="fa-solid fa-triangle-exclamation"></i>
+            You cannot revisit or change your answers after submission.</p>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" data-close-modal>Go Back</button>
+            <button class="btn btn-danger" id="confirmSubmitBtn"><i class="fa-solid fa-paper-plane"></i> Submit Now</button>
+        </div>
+    </div>
+</div>
+
+<div id="quizData" data-attempt-id="{{ attempt_id }}" data-category="{{ category }}" data-level="{{ level }}"
+     data-question-count="{{ question_count }}" data-duration="{{ duration }}" data-remaining="{{ remaining }}"
+     hidden></div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/quiz.js') }}"></script>
+{% endblock %}

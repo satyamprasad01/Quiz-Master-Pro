@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block title %}Quiz Master Pro - Test Your Knowledge{% endblock %}
+
+{% block content %}
+
+<!-- ============ HERO ============ -->
+<section class="hero container">
+    <div class="hero-badge fade-up"><i class="fa-solid fa-bolt"></i> 200 questions &middot; 4 categories &middot; 20 levels</div>
+    <h1 class="fade-up">Challenge Your Brain with <span class="grad">Quiz Master Pro</span></h1>
+    <p class="lead fade-up">Science, Mathematics, General Knowledge and Computer — 5 levels of difficulty in every
+        category, a 10-question quiz and a 10-minute timer. How far can you go?</p>
+    <div class="hero-cta fade-up">
+        {% if session.get('user_id') %}
+            <a href="{{ url_for('main.categories') }}" class="btn btn-lg"><i class="fa-solid fa-play"></i> Start Quiz</a>
+            <a href="{{ url_for('main.leaderboard') }}" class="btn btn-ghost btn-lg"><i class="fa-solid fa-trophy"></i> View Leaderboard</a>
+        {% else %}
+            <a href="{{ url_for('auth.signup') }}" class="btn btn-lg"><i class="fa-solid fa-play"></i> Start Quiz Now</a>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-ghost btn-lg"><i class="fa-solid fa-arrow-right-to-bracket"></i> I already have an account</a>
+        {% endif %}
+    </div>
+
+    <div class="hero-stats fade-up">
+        <div class="stat-card glass"><div class="num">{{ stats.questions }}+</div><div class="lbl">Questions</div></div>
+        <div class="stat-card glass"><div class="num">{{ stats.categories }}</div><div class="lbl">Categories</div></div>
+        <div class="stat-card glass"><div class="num">{{ stats.attempts }}</div><div class="lbl">Attempts</div></div>
+        <div class="stat-card glass"><div class="num">{{ stats.users }}</div><div class="lbl">Players</div></div>
+    </div>
+</section>
+
+<!-- ============ HERO ART ============ -->
+<div class="container hero-art fade-up">
+    <svg viewBox="0 0 800 320" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+            <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#a855f7"/>
+            </linearGradient>
+            <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#ec4899"/><stop offset="1" stop-color="#f59e0b"/>
+            </linearGradient>
+        </defs>
+        <rect x="150" y="30" width="500" height="250" rx="26" fill="url(#g1)" opacity="0.9"/>
+        <rect x="210" y="70" width="380" height="170" rx="18" fill="rgba(255,255,255,0.92)"/>
+        <circle cx="290" cy="125" r="34" fill="url(#g2)"/>
+        <path d="M290 108 L296 120 L310 122 L300 132 L303 146 L290 138 L277 146 L280 132 L270 122 L284 120 Z" fill="#fff"/>
+        <rect x="350" y="95" width="170" height="16" rx="8" fill="#e2e8f0"/>
+        <rect x="350" y="125" width="200" height="16" rx="8" fill="#e2e8f0"/>
+        <rect x="350" y="155" width="140" height="16" rx="8" fill="#e2e8f0"/>
+        <circle cx="300" cy="215" r="10" fill="#6366f1"/>
+        <circle cx="340" cy="215" r="10" fill="#a855f7"/>
+        <circle cx="380" cy="215" r="10" fill="#ec4899"/>
+        <circle cx="420" cy="215" r="10" fill="#e2e8f0"/>
+        <circle cx="460" cy="215" r="10" fill="#e2e8f0"/>
+        <circle cx="500" cy="215" r="10" fill="#e2e8f0"/>
+    </svg>
+</div>
+
+<!-- ============ ABOUT ============ -->
+<section class="section" id="about">
+    <div class="container about-grid">
+        <div class="fade-up">
+            <div class="hero-badge"><i class="fa-solid fa-circle-info"></i> About</div>
+            <h2>Built to push you to the next level</h2>
+            <p>Quiz Master Pro combines classic quiz fun with a rewarding level system. Each category has five levels of
+                increasing difficulty, from Very Easy to Expert.</p>
+            <p>Pass a level with a score of 60% or more to unlock the next one. Track your progress, climb the leaderboard
+                and earn achievement badges along the way.</p>
+            <ul class="about-points">
+                <li><i class="fa-solid fa-circle-check"></i><span>200 hand-written questions across 4 categories</span></li>
+                <li><i class="fa-solid fa-circle-check"></i><span>Questions and options shuffled on every attempt</span></li>
+                <li><i class="fa-solid fa-circle-check"></i><span>Quizzes that resume where you left off</span></li>
+                <li><i class="fa-solid fa-circle-check"></i><span>Detailed answer review after every quiz</span></li>
+            </ul>
+        </div>
+        <div class="about-visual fade-up">
+            <div class="glass about-mini"><i class="fa-solid fa-trophy"></i><span class="num">20</span><span class="lbl">Levels</span></div>
+            <div class="glass about-mini"><i class="fa-solid fa-stopwatch"></i><span class="num">10</span><span class="lbl">Min / Quiz</span></div>
+            <div class="glass about-mini"><i class="fa-solid fa-question"></i><span class="num">10</span><span class="lbl">Questions</span></div>
+            <div class="glass about-mini"><i class="fa-solid fa-medal"></i><span class="num">6</span><span class="lbl">Badges</span></div>
+        </div>
+    </div>
+</section>
+
+<!-- ============ FEATURES ============ -->
+<section class="section" id="features">
+    <div class="container">
+        <div class="section-head fade-up">
+            <h2>Everything you need to become a Quiz Master</h2>
+            <p>Polished quiz features wrapped in a modern, glassmorphism design.</p>
+        </div>
+        <div class="feature-grid">
+            <div class="glass feature-card fade-up">
+                <div class="feature-icon"><i class="fa-solid fa-stopwatch"></i></div>
+                <h3>10-Minute Timer</h3>
+                <p>Every quiz is timed. A live countdown keeps the pressure on and auto-submits when time is up.</p>
+            </div>
+            <div class="glass feature-card fade-up">
+                <div class="feature-icon"><i class="fa-solid fa-shuffle"></i></div>
+                <h3>Randomized Questions</h3>
+                <p>Questions and answer options are shuffled for every attempt, so no two quizzes are the same.</p>
+            </div>
+            <div class="glass feature-card fade-up">
+                <div class="feature-icon"><i class="fa-solid fa-layer-group"></i></div>
+                <h3>Unlock System</h3>
+                <p>Complete a level with a passing score to unlock the next. Climb from Very Easy to Expert.</p>
+            </div>
+            <div class="glass feature-card fade-up">
+                <div class="feature-icon"><i class="fa-solid fa-square-poll-vertical"></i></div>
+                <h3>Smart Question Palette</h3>
+                <p>Jump between questions with a visual palette showing answered, unanswered and current questions.</p>
+            </div>
+            <div class="glass feature-card fade-up">
+                <div class="feature-icon"><i class="fa-solid fa-rotate-right"></i></div>
+                <h3>Resume &amp; Review</h3>
+                <p>Refreshed the page? Your quiz is saved. After submitting, review every answer with explanations.</p>
+            </div>
+            <div class="glass feature-card fade-up">
+                <div class="feature-icon"><i class="fa-solid fa-chart-pie"></i></div>
+                <h3>Stats &amp; Leaderboard</h3>
+                <p>Rich charts, scores, grades and a global leaderboard show exactly how you rank.</p>
+            </div>
+            <div class="glass feature-card fade-up">
+                <div class="feature-icon"><i class="fa-solid fa-medal"></i></div>
+                <h3>Achievement Badges</h3>
+                <p>Earn badges for milestones like perfect scores, category domination and lightning-fast quizzes.</p>
+            </div>
+            <div class="glass feature-card fade-up">
+                <div class="feature-icon"><i class="fa-solid fa-file-pdf"></i></div>
+                <h3>PDF Export</h3>
+                <p>Export your results as a PDF to save or share your performance.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============ CTA ============ -->
+<section class="section">
+    <div class="container">
+        <div class="glass text-center fade-up" style="padding: 54px 30px;">
+            <h2 style="font-size: clamp(1.6rem, 4vw, 2.3rem); font-weight: 800;">Ready to prove yourself?</h2>
+            <p class="muted mt-1 mb-3" style="max-width: 520px; margin-inline: auto;">Pick a category, start at Level 1 and work your way up to the Expert challenge.</p>
+            {% if session.get('user_id') %}
+                <a href="{{ url_for('main.categories') }}" class="btn btn-lg"><i class="fa-solid fa-play"></i> Go to Categories</a>
+            {% else %}
+                <a href="{{ url_for('auth.signup') }}" class="btn btn-lg"><i class="fa-solid fa-user-plus"></i> Create Free Account</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+{% endblock %}
