@@ -118,23 +118,12 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Open **http://127.0.0.1:5000** in your browser.
 
 > The SQLite database `database.db` is created automatically on first run and
 > seeded with the admin account and all 200 questions. Delete `database.db`
 > to reset everything.
 
-### Default admin account
 
-| Username | Password  | Role  |
-|----------|-----------|-------|
-| `admin`  | `admin123`| Admin |
-
-> **Important:** change the admin password and set a strong `SECRET_KEY`
-> environment variable before deploying:
-> `SECRET_KEY=$(python -c "import secrets; print(secrets.token_hex(32))") python app.py`
-
----
 
 ## How it works
 
@@ -209,6 +198,3 @@ PY
 
 ---
 
-## License
-
-MIT - free to use, modify and share.
